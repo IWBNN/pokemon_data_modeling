@@ -27,4 +27,21 @@ GROUP BY
 
 
 select * from pokemon_trainer where name = 'Trainer1';
+-- JSON으로 표현한 트레이너가 보유한 포켓몬의 이름과 수, 그에 해당하는 elemental의 수
+SELECT
+    pt.name AS trainer_name,
+    JSON_OBJECTAGG(
+            JSON_UNQUOTE(JSON_EXTRACT(pt.capturedPokemon, '$.*')),
+            JSON_OBJECTAGG(
+                    pd.elemental,
+                    JSON_UNQUOTE(JSON_EXTRACT(pt.capturedPokemon, CONCAT('$."', pd.monsterName, '"')))
+            )
+    ) AS pokemon_data
+FROM
+    pokemon_trainer pt
+        JOIN
+    poke_dex pd ON JSON_UNQUOTE(JSON_EXTRACT(pt.capturedPokemon, '$.*')) = pd.monsterName
+GROUP BY
+    pt.name;
+
 
