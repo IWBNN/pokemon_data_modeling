@@ -5,7 +5,7 @@ use pokemon_game;
 drop table if exists pokemon;
 drop table if exists pokemon_trainer;
 drop table if exists poke_dex;
-drop table pokemon_skill;
+drop table pokemon_skills;
 drop table battle_result;
 --
 -- (1) 포켓몬 기술 스키마
@@ -16,7 +16,7 @@ create table pokemon_skill
     id           int primary key auto_increment,
     -- 컬럼명이 사용되는 맥락을 고려했을 때, 충분한 설명이 필요한 경우, prefix, postfix 사용을 고려
     skill_name   varchar(20) not null,
-    skill_effect varchar(20) not null,
+    skill_effect varchar(30) not null,
     skill_type   varchar(10) not null,
     skill_damage varchar(10) not null
 );
@@ -32,14 +32,15 @@ create table poke_dex -- 포켓몬 도감 table 설정
     monster_type    varchar(20)    not null comment '원소 속성 / 특성',
     maxHp           int            not null,
     evolution_stage int  default 1 not null comment '진화 단계 (1~3)',
-    -- evolves_from : 데이터 선후관계를 판탄해서 선행 entuty or record 가 후행 항목에 의해 참조되게 설계
-    evolves_from    int            not null comment '진화 전 형태',
+    -- evolves_from : 데이터 선후관계를 판단해서 선행 entity or record 가 후행 항목에 의해 참조되게 설계
+    evolves_from    int            default null comment '진화 전 형태',
     is_legendary    bool default false,
     index idx_monstertype (monster_type),
     foreign key fk_evolvesfrom (evolves_from) references poke_dex (monster_id), -- SELF JOIN 수행
     -- DOMAIN 의미 유효성 범주
     constraint evolutionstage_range check ( evolution_stage between 1 and 3)
 );
+select * from poke_dex;
 --
 -- (3) 트레이너 스키마
 --
@@ -82,7 +83,10 @@ drop table battle_result;
 create table battle_result(
     id int primary key auto_increment, -- 전투 한건, 한건이 고유하게 식별될 수 있는 기록으로 다뤄짐
     pokemon_id_1 int not null,
+    pokemon_id_2 int not null,
     winner_id int null,
     -- process_log varchar(255), -- 만약 전투 과정이 필요하면 칼럼 추가
-    result_memo varchar(50)
+    result_memo varchar(50),
+    foreign key fk_battleresult_pokemon1 (pokemon_id_1) references pokemon (id),
+    foreign key fk_battleresult_pokemon2 (pokemon_id_2) references pokemon (id)
 );
